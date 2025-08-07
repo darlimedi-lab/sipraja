@@ -1,165 +1,81 @@
+<!-- login.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>SIPRAJA - Sistem Registrasi Anak Binaan</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; padding: 0; }
-    header { text-align: center; background: #001f3f; color: white; padding: 20px 10px; }
-    header img { width: 80px; margin-bottom: 10px; }
-    .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #ccc; margin-top: 20px; }
-    input, textarea, button, select { width: 100%; padding: 10px; margin-top: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #eee; }
-    .hidden { display: none; }
-    .btn { background: #2563eb; color: white; padding: 10px; border: none; cursor: pointer; }
-    .btn:hover { background: #1d4ed8; }
-    canvas { margin-top: 30px; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login SIPRAJA</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <img src="logo_kemenkumham.png" alt="Logo">
-    <h2>Kementerian Imigrasi dan Pemasyarakatan</h2>
-    <p>Direktorat Jenderal Pemasyarakatan<br>
-    Kantor Wilayah Ditjen PAS DKI Jakarta<br>
-    LPKA Kelas II Jakarta<br>
-    Jl. Raya Gandul (Kompleks PSDM Hukum), Ciganjur, Jagakarsa, Jakarta Selatan 12630</p>
-  </header>
+  <div class="login-container">
+    <h2>Login Petugas</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Username" required><br>
+      <input type="password" id="password" placeholder="Password" required><br>
+      <button type="submit">Login</button>
+    </form>
+    <p id="loginError" class="error"></p>
+  </div>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if ((user === 'medi' && pass === 'admin') || (user === 'lpkajkt' && pass === 'admin123')) {
+        localStorage.setItem('loggedIn', 'true');
+        window.location.href = 'index.html';
+      } else {
+        document.getElementById('loginError').textContent = 'Login gagal. Coba lagi.';
+      }
+    });
+  </script>
+</body>
+</html>
 
-  <div class="container">
-    <div id="loginSection">
-      <h2>Login Petugas</h2>
-      <input type="text" id="loginName" placeholder="Nama Petugas" />
-      <input type="password" id="loginPass" placeholder="Password" />
-      <button class="btn" onclick="login()">Login</button>
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIPRAJA - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="navbar">
+    <h1>SIPRAJA</h1>
+    <button onclick="logout()">Logout</button>
+  </div>
+  <div class="sidebar">
+    <button onclick="showSection('data')">Data Anak</button>
+    <button onclick="showSection('upload')">Upload Excel</button>
+    <button onclick="showSection('grafik')">Grafik</button>
+  </div>
+
+  <div class="main">
+    <div id="dataSection" class="section">
+      <h2>Data Anak Binaan</h2>
+      <table id="dataTable" border="1">
+        <thead>
+          <tr><th>Nama</th><th>NIK</th><th>Lama Pidana</th><th>Tanggal Bebas</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
 
-    <div id="mainSection" class="hidden">
-      <h1>SIPRAJA</h1>
-      <p>Selamat datang, <strong id="namaPetugas"></strong></p>
-      <h2>Form Anak Binaan</h2>
-      <form onsubmit="simpanData(event)">
-        <input id="nama" placeholder="Nama Lengkap" required />
-        <input id="nik" placeholder="NIK" required />
-        <input type="date" id="tglLahir" onchange="hitungUsia()" required />
-        <input id="usia" placeholder="Usia" readonly />
-        <input id="jenisPerkara" placeholder="Jenis Perkara" required />
-        <input id="klasifikasi" placeholder="Klasifikasi" required />
-        <textarea id="catatan" placeholder="Catatan"></textarea>
-        <button type="submit" class="btn">Simpan</button>
-      </form>
+    <div id="uploadSection" class="section" style="display:none">
+      <h2>Import Data Excel</h2>
+      <input type="file" id="uploadExcel" accept=".xlsx">
+    </div>
 
-      <h2>Cari Data</h2>
-      <input type="text" id="search" oninput="tampilkanData()" placeholder="Cari nama/NIK/perkara" />
-      <h2>Data Anak Binaan</h2>
-      <button class="btn" onclick="exportExcel()">Export Excel</button>
-      <button class="btn" onclick="backupJSON()">Backup Data</button>
-      <table>
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>NIK</th>
-            <th>Tgl Lahir</th>
-            <th>Usia</th>
-            <th>Perkara</th>
-            <th>Klasifikasi</th>
-            <th>Catatan</th>
-          </tr>
-        </thead>
-        <tbody id="dataTable"></tbody>
-      </table>
-
-      <h2>Grafik Jenis Perkara</h2>
-      <canvas id="chartPerkara"></canvas>
+    <div id="grafikSection" class="section" style="display:none">
+      <h2>Grafik Visualisasi</h2>
+      <canvas id="grafikCanvas" width="400" height="200"></canvas>
     </div>
   </div>
 
-  <script>
-    const loginAllowed = { "medi darli": "admin123" };
-
-    function login() {
-      const name = document.getElementById("loginName").value.trim().toLowerCase();
-      const pass = document.getElementById("loginPass").value;
-      if (loginAllowed[name] === pass) {
-        document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("mainSection").classList.remove("hidden");
-        document.getElementById("namaPetugas").textContent = name;
-        tampilkanData(); setTimeout(() => renderChart(), 300);
-      } else alert("Login gagal!");
-    }
-
-    function hitungUsia() {
-      const tgl = new Date(document.getElementById("tglLahir").value);
-      const now = new Date();
-      let usia = now.getFullYear() - tgl.getFullYear();
-      if (now.getMonth() < tgl.getMonth() || (now.getMonth() === tgl.getMonth() && now.getDate() < tgl.getDate())) usia--;
-      document.getElementById("usia").value = usia + " tahun";
-    }
-
-    function simpanData(e) {
-      e.preventDefault();
-      const data = {
-        nama: document.getElementById("nama").value,
-        nik: document.getElementById("nik").value,
-        tglLahir: document.getElementById("tglLahir").value,
-        usia: document.getElementById("usia").value,
-        jenisPerkara: document.getElementById("jenisPerkara").value,
-        klasifikasi: document.getElementById("klasifikasi").value,
-        catatan: document.getElementById("catatan").value
-      };
-      let arr = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      arr.push(data);
-      localStorage.setItem("sipraja_data", JSON.stringify(arr));
-      e.target.reset(); tampilkanData(); renderChart();
-    }
-
-    function tampilkanData() {
-      const tbody = document.getElementById("dataTable");
-      const keyword = document.getElementById("search").value.toLowerCase();
-      const arr = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      tbody.innerHTML = "";
-      arr.filter(d => d.nama.toLowerCase().includes(keyword) ||
-                      d.nik.includes(keyword) ||
-                      d.jenisPerkara.toLowerCase().includes(keyword))
-         .forEach(d => {
-           tbody.innerHTML += `<tr><td>${d.nama}</td><td>${d.nik}</td><td>${d.tglLahir}</td><td>${d.usia}</td><td>${d.jenisPerkara}</td><td>${d.klasifikasi}</td><td>${d.catatan}</td></tr>`;
-         });
-    }
-
-    function exportExcel() {
-      const data = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "DataAnak");
-      XLSX.writeFile(wb, "data_anak_sipraja.xlsx");
-    }
-
-    function backupJSON() {
-      const data = localStorage.getItem("sipraja_data");
-      const blob = new Blob([data], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "backup_data_sipraja.json";
-      link.click();
-    }
-
-    function renderChart() {
-      const data = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      const counts = {};
-      data.forEach(d => counts[d.jenisPerkara] = (counts[d.jenisPerkara] || 0) + 1);
-      const ctx = document.getElementById("chartPerkara").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: Object.keys(counts),
-          datasets: [{ label: "Jumlah Perkara", data: Object.values(counts), backgroundColor: "#3b82f6" }]
-        }
-      });
-    }
-  </script>
+  <script src="xlsx.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
