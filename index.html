@@ -1,165 +1,65 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>SIPRAJA - Sistem Registrasi Anak Binaan</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; padding: 0; }
-    header { text-align: center; background: #001f3f; color: white; padding: 20px 10px; }
-    header img { width: 80px; margin-bottom: 10px; }
-    .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #ccc; margin-top: 20px; }
-    input, textarea, button, select { width: 100%; padding: 10px; margin-top: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #eee; }
-    .hidden { display: none; }
-    .btn { background: #2563eb; color: white; padding: 10px; border: none; cursor: pointer; }
-    .btn:hover { background: #1d4ed8; }
-    canvas { margin-top: 30px; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIPRAJA - Sistem Informasi Pemasyarakatan Anak</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="logo.png">
 </head>
+
 <body>
   <header>
-    <img src="logo_kemenkumham.png" alt="Logo">
-    <h2>Kementerian Imigrasi dan Pemasyarakatan</h2>
-    <p>Direktorat Jenderal Pemasyarakatan<br>
-    Kantor Wilayah Ditjen PAS DKI Jakarta<br>
-    LPKA Kelas II Jakarta<br>
-    Jl. Raya Gandul (Kompleks PSDM Hukum), Ciganjur, Jagakarsa, Jakarta Selatan 12630</p>
+    <img src="logo.png" alt="Logo Kementerian" class="logo">
+    <div class="identitas">
+      <h1>Kementerian Imigrasi dan Pemasyarakatan</h1>
+      <p>Direktorat Jenderal Pemasyarakatan</p>
+      <p>Kantor Wilayah Ditjen PAS DKI Jakarta</p>
+      <p>LPKA Kelas II Jakarta</p>
+      <p>Jl. Raya Gandul (Kompleks PSDM Hukum), Ciganjur, Jagakarsa, Jakarta Selatan 12630</p>
+    </div>
+    <button onclick="logout()" class="logout">Logout</button>
   </header>
 
-  <div class="container">
-    <div id="loginSection">
-      <h2>Login Petugas</h2>
-      <input type="text" id="loginName" placeholder="Nama Petugas" />
-      <input type="password" id="loginPass" placeholder="Password" />
-      <button class="btn" onclick="login()">Login</button>
-    </div>
-
-    <div id="mainSection" class="hidden">
-      <h1>SIPRAJA</h1>
-      <p>Selamat datang, <strong id="namaPetugas"></strong></p>
-      <h2>Form Anak Binaan</h2>
-      <form onsubmit="simpanData(event)">
-        <input id="nama" placeholder="Nama Lengkap" required />
-        <input id="nik" placeholder="NIK" required />
-        <input type="date" id="tglLahir" onchange="hitungUsia()" required />
-        <input id="usia" placeholder="Usia" readonly />
-        <input id="jenisPerkara" placeholder="Jenis Perkara" required />
-        <input id="klasifikasi" placeholder="Klasifikasi" required />
-        <textarea id="catatan" placeholder="Catatan"></textarea>
-        <button type="submit" class="btn">Simpan</button>
+  <main>
+    <section class="form-section">
+      <h2>Input Data Anak Binaan</h2>
+      <form id="formInput">
+        <input type="text" id="nama" placeholder="Nama Lengkap" required>
+        <input type="text" id="nik" placeholder="NIK" required>
+        <input type="date" id="tglLahir" placeholder="Tanggal Lahir" required>
+        <input type="date" id="tglTahanan" placeholder="Tanggal Penahanan Awal" required>
+        <input type="number" id="pidanaTahun" placeholder="Lama Pidana (Tahun)" required>
+        <input type="number" id="pidanaBulan" placeholder="Lama Pidana (Bulan)">
+        <input type="number" id="pidanaHari" placeholder="Lama Pidana (Hari)">
+        <input type="number" id="totalRemisi" placeholder="Total Remisi (Hari)">
+        <button type="submit">Simpan Data</button>
       </form>
+    </section>
 
-      <h2>Cari Data</h2>
-      <input type="text" id="search" oninput="tampilkanData()" placeholder="Cari nama/NIK/perkara" />
+    <section class="data-section">
       <h2>Data Anak Binaan</h2>
-      <button class="btn" onclick="exportExcel()">Export Excel</button>
-      <button class="btn" onclick="backupJSON()">Backup Data</button>
-      <table>
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>NIK</th>
-            <th>Tgl Lahir</th>
-            <th>Usia</th>
-            <th>Perkara</th>
-            <th>Klasifikasi</th>
-            <th>Catatan</th>
-          </tr>
-        </thead>
-        <tbody id="dataTable"></tbody>
-      </table>
+      <div id="dataTable"></div>
+    </section>
 
-      <h2>Grafik Jenis Perkara</h2>
-      <canvas id="chartPerkara"></canvas>
-    </div>
-  </div>
+    <section class="grafik-section">
+      <h2>Visualisasi Data</h2>
+      <canvas id="grafikData"></canvas>
+    </section>
 
-  <script>
-    const loginAllowed = { "medi darli": "admin123" };
+    <section class="kontak-section">
+      <h2>Kontak Petugas</h2>
+      <p><strong>Sidang Online:</strong> Andi Prasetyo - 08990012214</p>
+      <p><strong>Litmas Online:</strong> Rina Mariana - 081290468651</p>
+    </section>
+  </main>
 
-    function login() {
-      const name = document.getElementById("loginName").value.trim().toLowerCase();
-      const pass = document.getElementById("loginPass").value;
-      if (loginAllowed[name] === pass) {
-        document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("mainSection").classList.remove("hidden");
-        document.getElementById("namaPetugas").textContent = name;
-        tampilkanData(); setTimeout(() => renderChart(), 300);
-      } else alert("Login gagal!");
-    }
+  <footer>
+    <p>&copy; 2025 SIPRAJA - Sistem Informasi Pemasyarakatan Anak</p>
+  </footer>
 
-    function hitungUsia() {
-      const tgl = new Date(document.getElementById("tglLahir").value);
-      const now = new Date();
-      let usia = now.getFullYear() - tgl.getFullYear();
-      if (now.getMonth() < tgl.getMonth() || (now.getMonth() === tgl.getMonth() && now.getDate() < tgl.getDate())) usia--;
-      document.getElementById("usia").value = usia + " tahun";
-    }
-
-    function simpanData(e) {
-      e.preventDefault();
-      const data = {
-        nama: document.getElementById("nama").value,
-        nik: document.getElementById("nik").value,
-        tglLahir: document.getElementById("tglLahir").value,
-        usia: document.getElementById("usia").value,
-        jenisPerkara: document.getElementById("jenisPerkara").value,
-        klasifikasi: document.getElementById("klasifikasi").value,
-        catatan: document.getElementById("catatan").value
-      };
-      let arr = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      arr.push(data);
-      localStorage.setItem("sipraja_data", JSON.stringify(arr));
-      e.target.reset(); tampilkanData(); renderChart();
-    }
-
-    function tampilkanData() {
-      const tbody = document.getElementById("dataTable");
-      const keyword = document.getElementById("search").value.toLowerCase();
-      const arr = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      tbody.innerHTML = "";
-      arr.filter(d => d.nama.toLowerCase().includes(keyword) ||
-                      d.nik.includes(keyword) ||
-                      d.jenisPerkara.toLowerCase().includes(keyword))
-         .forEach(d => {
-           tbody.innerHTML += `<tr><td>${d.nama}</td><td>${d.nik}</td><td>${d.tglLahir}</td><td>${d.usia}</td><td>${d.jenisPerkara}</td><td>${d.klasifikasi}</td><td>${d.catatan}</td></tr>`;
-         });
-    }
-
-    function exportExcel() {
-      const data = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "DataAnak");
-      XLSX.writeFile(wb, "data_anak_sipraja.xlsx");
-    }
-
-    function backupJSON() {
-      const data = localStorage.getItem("sipraja_data");
-      const blob = new Blob([data], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "backup_data_sipraja.json";
-      link.click();
-    }
-
-    function renderChart() {
-      const data = JSON.parse(localStorage.getItem("sipraja_data") || "[]");
-      const counts = {};
-      data.forEach(d => counts[d.jenisPerkara] = (counts[d.jenisPerkara] || 0) + 1);
-      const ctx = document.getElementById("chartPerkara").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: Object.keys(counts),
-          datasets: [{ label: "Jumlah Perkara", data: Object.values(counts), backgroundColor: "#3b82f6" }]
-        }
-      });
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
+
 </html>
